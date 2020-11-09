@@ -45,6 +45,8 @@
 #define _BASE_TEB_EDGES_H_
 
 #include <teb_local_planner/teb_config.h>
+#include <teb_local_planner/g2o_types/vertex_pose.h>
+#include <teb_local_planner/g2o_types/vertex_timediff.h>
 
 #include <g2o/core/base_binary_edge.h>
 #include <g2o/core/base_unary_edge.h>
@@ -270,10 +272,110 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW   
 };
 
+namespace internal {
 
+inline const VertexPose*
+toPose(const g2o::HyperGraph::Vertex* _v) {
+  return dynamic_cast<const VertexPose*>(_v);
+}
 
+inline const VertexTimeDiff*
+toDt(const g2o::HyperGraph::Vertex* _v) {
+  return dynamic_cast<const VertexTimeDiff*>(_v);
+}
 
+}  // namespace internal
 
+// below edges with a 'physical' meaning
+
+/// @brief Edge with a time-diff vertex
+template <int D, typename E>
+struct BaseEdgeDt : public BaseTebUnaryEdge<D, E, VertexTimeDiff> {
+protected:
+  inline const VertexTimeDiff*
+  getDt0() const {
+    return internal::toDt(this->_vertices[0]);
+  };
+};
+
+/// @brief Edge with a pose vertex
+template <int D, typename E>
+struct BaseEdgePose : public BaseTebUnaryEdge<D, E, VertexPose> {
+protected:
+  inline const VertexPose*
+  getPose0() const {
+    return internal::toPose(this->_vertices[0]);
+  };
+};
+
+/// @brief Edge connecting two poses
+template <int D, typename E>
+struct BaseEdgeTwoPoses : public BaseTebBinaryEdge<D, E, VertexPose, VertexPose> {
+protected:
+  inline const VertexPose*
+  getPose0() const {
+    return internal::toPose(this->_vertices[0]);
+  }
+
+  inline const VertexPose*
+  getPose1() const {
+    return internal::toPose(this->_vertices[1]);
+  }
+};
+
+/// @brief Edge representing velocity
+template <int D, typename E>
+struct BaseEdgeVelocity : public BaseTebMultiEdge<D, E> {
+  BaseEdgeVelocity() { BaseTebMultiEdge<D, E>::resize(3); }
+
+protected:
+  inline const VertexPose*
+  getPose0() const {
+    return internal::toPose(this->_vertices[0]);
+  }
+
+  inline const VertexPose*
+  getPose1() const {
+    return internal::toPose(this->_vertices[1]);
+  }
+
+  inline const VertexTimeDiff*
+  getDt0() const {
+    return internal::toDt(this->_vertices[2]);
+  };
+};
+
+/// @brief Edge representing acceleration
+template <int D, typename E>
+struct BaseEdgeAcceleration : public BaseTebMultiEdge<D, E> {
+  BaseEdgeAcceleration() { BaseTebMultiEdge<D, E>::resize(5); }
+
+protected:
+  inline const VertexPose*
+  getPose0() const {
+    return internal::toPose(this->_vertices[0]);
+  }
+
+  inline const VertexPose*
+  getPose1() const {
+    return internal::toPose(this->_vertices[1]);
+  }
+
+  inline const VertexPose*
+  getPose2() const {
+    return internal::toPose(this->_vertices[2]);
+  }
+
+  inline const VertexTimeDiff*
+  getDt0() const {
+    return internal::toDt(this->_vertices[3]);
+  };
+
+  inline const VertexTimeDiff*
+  getDt1() const {
+    return internal::toDt(this->_vertices[4]);
+  };
+};
 
 } // end namespace
 
