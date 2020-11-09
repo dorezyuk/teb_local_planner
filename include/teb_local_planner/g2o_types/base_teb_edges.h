@@ -44,15 +44,18 @@
 #ifndef _BASE_TEB_EDGES_H_
 #define _BASE_TEB_EDGES_H_
 
-#include <teb_local_planner/teb_config.h>
 #include <teb_local_planner/g2o_types/vertex_pose.h>
 #include <teb_local_planner/g2o_types/vertex_timediff.h>
+#include <teb_local_planner/teb_config.h>
+#include <teb_local_planner/timed_elastic_band.h>
 
 #include <g2o/core/base_binary_edge.h>
 #include <g2o/core/base_unary_edge.h>
 #include <g2o/core/base_multi_edge.h>
 
 #include <cmath>
+#include <memory>
+#include <type_traits>
 
 namespace teb_local_planner
 {
@@ -378,6 +381,156 @@ protected:
     return internal::toDt(this->_vertices[4]);
   };
 };
+
+namespace internal {
+
+// below some trickery to construct edges with different types of vertices
+// we use three overloads of the setVertex function:
+// 1. A base overload which is basically no-op
+// 2. An overload where we add exactly one vertex
+// 3. A variadic overload which will do the looping
+
+using OgEdge = g2o::OptimizableGraph::Edge;
+using OgVertex = g2o::OptimizableGraph::Vertex;
+
+// note: suppress -wunused-parameter warning
+// the base overload which is a noop
+inline void setVertex(__attribute__((unused)) OgEdge &_edge,
+                      __attribute__((unused)) size_t _counter) noexcept {}
+
+// one edge overload
+template <typename Iter>
+inline void setVertex(OgEdge &_edge, size_t _counter, Iter &_iter) {
+  _edge.setVertex(_counter, &*_iter++);
+}
+
+// variadic overload
+// note: we don't inline here but go for full recursion.
+template <typename Iter, typename... OtherIters>
+void setVertex(OgEdge &_edge, size_t _counter, Iter &_iter,
+               OtherIters &... _rem) {
+  setVertex(_edge, _counter, _iter);
+  setVertex(_edge, ++_counter, _rem...);
+}
+
+using RefVectorXd = Eigen::Ref<const Eigen::VectorXd>;
+using g2o::HyperGraph;
+
+// this is a 'generic' way to construct edges for g2o
+// from here we will call the variadic setVertex functions above
+
+template <typename Edge, typename Iter, typename... OtherIters>
+void addEdges(HyperGraph &_graph, const TebConfig &_cfg,
+              const RefVectorXd &_diag, size_t _n, Iter _iter,
+              OtherIters... _rem) {
+  // diagonal of the info matrix
+  // defining any element as zero will force to ignore the edge
+  if ((_diag.array() == 0).all())
+    return;
+
+  // setup the info matrix
+  const typename Edge::InformationType info = _diag.asDiagonal();
+
+  // generate _n edges...
+  for (size_t nn = 0; nn != _n; ++nn) {
+    std::unique_ptr<Edge> edge(new Edge());
+    // do the template expansion
+    setVertex(*edge, 0, _iter, _rem...);
+    edge->setInformation(info);
+    edge->setConfig(_cfg);
+
+    // add the edge to the graph
+    // _graph owns the edge now
+    _graph.addEdge(edge.release());
+  }
+}
+
+// below some trickery to check if a class derives from a templated base class
+// adjusted from
+// https://stackoverflow.com/questions/34672441/stdis-base-of-for-template-classes
+template <template <int, typename...> class Base, typename Derived>
+struct is_base_of_impl {
+  template <int D, typename... Ts>
+  static constexpr std::true_type test(const Base<D, Ts...> *) {
+    return {};
+  }
+
+  static constexpr std::false_type test(...) { return {}; }
+
+  using type = decltype(test(std::declval<Derived *>()));
+};
+
+template <template <int, typename...> class Base, typename Derived>
+using is_base_of = typename is_base_of_impl<Base, Derived>::type;
+
+// below the specialization for edge-families.
+// see the 'physical' edges in above.
+// we will use SFINAE to find the right addEdges function based on edge type.
+// https://en.cppreference.com/w/cpp/language/sfinae for details
+
+using Teb = TimedElasticBand;
+/**
+ * @brief helper function to create two-pose based edge families
+ */
+template <typename Edge,
+          typename std::enable_if<is_base_of<BaseEdgeTwoPoses, Edge>::value,
+                                  int>::type = 0>
+void addEdges(HyperGraph &_graph, Teb &_teb, const TebConfig &_cfg,
+              const RefVectorXd &_info) {
+  const auto &poses = _teb.poses();
+  if (poses.size() < 2)
+    return;
+
+  const auto N = poses.size() - 1;
+  addEdges<Edge>(_graph, _cfg, _info, N, poses.begin(),
+                 std::next(poses.begin()));
+}
+
+/**
+ * @brief helper function to create velocity-based edge families
+ */
+template <typename Edge,
+          typename std::enable_if<is_base_of<BaseEdgeVelocity, Edge>::value,
+                                  int>::type = 0>
+void addEdges(HyperGraph &_graph, Teb &_teb, const TebConfig &_cfg,
+              const RefVectorXd &_info) {
+  const auto &poses = _teb.poses();
+  const auto &times = _teb.timediffs();
+  if (poses.size() < 2)
+    return;
+
+  const auto N = poses.size() - 1;
+  addEdges<Edge>(_graph, _cfg, _info, N, poses.begin(),
+                 std::next(poses.begin()), times.begin());
+}
+
+/**
+ * @brief helper function to create acceleration-based edge families
+ */
+template <typename Edge,
+          typename std::enable_if<is_base_of<BaseEdgeAcceleration, Edge>::value,
+                                  int>::type = 0>
+void addEdges(HyperGraph &_graph, Teb &_teb, const TebConfig &_cfg,
+              const RefVectorXd &_info) {
+  const auto &poses = _teb.poses();
+  const auto &times = _teb.timediffs();
+  if (poses.size() < 3)
+    return;
+
+  const auto N = poses.size() - 2;
+  // setup the poses
+  auto p1 = poses.begin();
+  auto p2 = std::next(p1);
+  auto p3 = std::next(p2);
+  // setup the times
+  auto t1 = times.begin();
+  auto t2 = std::next(t1);
+
+  // pass to the addEdges
+  addEdges<Edge>(_graph, _cfg, _info, N, p1, p2, p3, t1, t2);
+}
+
+} // namespace internal
 
 } // end namespace
 
