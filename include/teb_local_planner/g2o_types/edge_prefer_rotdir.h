@@ -62,7 +62,7 @@ namespace teb_local_planner
  * \e weight can be set using setInformation(). \n
  * @see TebOptimalPlanner::AddEdgePreferRotDir
  */     
-class EdgePreferRotDir : public BaseTebBinaryEdge<1, double, VertexPose, VertexPose>
+class EdgePreferRotDir : public BaseEdgeTwoPoses<1, double>
 {
 public:
     
@@ -79,8 +79,8 @@ public:
    */    
   void computeError()
   {
-    const VertexPose* conf1 = static_cast<const VertexPose*>(_vertices[0]);
-    const VertexPose* conf2 = static_cast<const VertexPose*>(_vertices[1]);
+    const VertexPose* conf1 = getPose0();
+    const VertexPose* conf2 = getPose1();
     
     _error[0] = penaltyBoundFromBelow( _measurement*g2o::normalize_theta(conf2->theta()-conf1->theta()) , 0, 0);
 

@@ -67,7 +67,7 @@ namespace teb_local_planner
  * @see TebOptimalPlanner::AddEdgesObstacles, TebOptimalPlanner::EdgeInflatedObstacle
  * @remarks Do not forget to call setTebConfig() and setObstacle()
  */     
-class EdgeObstacle : public BaseTebUnaryEdge<1, const Obstacle*, VertexPose>
+class EdgeObstacle : public BaseEdgePose<1, const Obstacle*>
 {
 public:
     
@@ -85,7 +85,7 @@ public:
   void computeError()
   {
     ROS_ASSERT_MSG(cfg_ && _measurement && robot_model_, "You must call setTebConfig(), setObstacle() and setRobotModel() on EdgeObstacle()");
-    const VertexPose* bandpt = static_cast<const VertexPose*>(_vertices[0]);
+    const VertexPose* bandpt = getPose0();
 
     double dist = robot_model_->calculateDistance(bandpt->pose(), _measurement);
 
@@ -114,7 +114,7 @@ public:
   void linearizeOplus()
   {
     ROS_ASSERT_MSG(cfg_, "You must call setTebConfig on EdgePointObstacle()");
-    const VertexPose* bandpt = static_cast<const VertexPose*>(_vertices[0]);
+    const VertexPose* bandpt = getPose0();
     
     Eigen::Vector2d deltaS = *_measurement - bandpt->position(); 
     double angdiff = atan2(deltaS[1],deltaS[0])-bandpt->theta();
@@ -206,7 +206,7 @@ public:
  * @see TebOptimalPlanner::AddEdgesObstacles, TebOptimalPlanner::EdgeObstacle
  * @remarks Do not forget to call setTebConfig() and setObstacle()
  */     
-class EdgeInflatedObstacle : public BaseTebUnaryEdge<2, const Obstacle*, VertexPose>
+class EdgeInflatedObstacle : public BaseEdgePose<2, const Obstacle*>
 {
 public:
     
@@ -224,7 +224,7 @@ public:
   void computeError()
   {
     ROS_ASSERT_MSG(cfg_ && _measurement && robot_model_, "You must call setTebConfig(), setObstacle() and setRobotModel() on EdgeInflatedObstacle()");
-    const VertexPose* bandpt = static_cast<const VertexPose*>(_vertices[0]);
+    const VertexPose* bandpt = getPose0();
 
     double dist = robot_model_->calculateDistance(bandpt->pose(), _measurement);
 

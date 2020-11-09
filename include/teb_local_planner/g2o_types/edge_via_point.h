@@ -63,7 +63,7 @@ namespace teb_local_planner
  * @see TebOptimalPlanner::AddEdgesViaPoints
  * @remarks Do not forget to call setTebConfig() and setViaPoint()
  */     
-class EdgeViaPoint : public BaseTebUnaryEdge<1, const Eigen::Vector2d*, VertexPose>
+class EdgeViaPoint : public BaseEdgePose<1, const Eigen::Vector2d*>
 {
 public:
     
@@ -81,7 +81,7 @@ public:
   void computeError()
   {
     ROS_ASSERT_MSG(cfg_ && _measurement, "You must call setTebConfig(), setViaPoint() on EdgeViaPoint()");
-    const VertexPose* bandpt = static_cast<const VertexPose*>(_vertices[0]);
+    const VertexPose* bandpt = getPose0();
 
     _error[0] = (bandpt->position() - *_measurement).norm();
 

@@ -50,8 +50,7 @@
 #include <teb_local_planner/g2o_types/penalties.h>
 #include <teb_local_planner/teb_config.h>
 
-
-#include <iostream>
+#include <cmath>
 
 namespace teb_local_planner
 {
@@ -72,27 +71,19 @@ namespace teb_local_planner
  * @see TebOptimalPlanner::AddEdgesVelocity
  * @remarks Do not forget to call setTebConfig()
  */  
-class EdgeVelocity : public BaseTebMultiEdge<2, double>
+class EdgeVelocity : public BaseEdgeVelocity<2, double>
 {
 public:
-  
-  /**
-   * @brief Construct edge.
-   */	      
-  EdgeVelocity()
-  {
-    this->resize(3); // Since we derive from a g2o::BaseMultiEdge, set the desired number of vertices
-  }
-  
+
   /**
    * @brief Actual cost function
    */  
   void computeError()
   {
     ROS_ASSERT_MSG(cfg_, "You must call setTebConfig on EdgeVelocity()");
-    const VertexPose* conf1 = static_cast<const VertexPose*>(_vertices[0]);
-    const VertexPose* conf2 = static_cast<const VertexPose*>(_vertices[1]);
-    const VertexTimeDiff* deltaT = static_cast<const VertexTimeDiff*>(_vertices[2]);
+    const VertexPose* conf1 = getPose0();
+    const VertexPose* conf2 = getPose1();
+    const VertexTimeDiff* deltaT = getDt0();
     
     const Eigen::Vector2d deltaS = conf2->estimate().position() - conf1->estimate().position();
     
@@ -126,9 +117,9 @@ public:
   void linearizeOplus()
   {
     ROS_ASSERT_MSG(cfg_, "You must call setTebConfig on EdgeVelocity()");
-    const VertexPose* conf1 = static_cast<const VertexPose*>(_vertices[0]);
-    const VertexPose* conf2 = static_cast<const VertexPose*>(_vertices[1]);
-    const VertexTimeDiff* deltaT = static_cast<const VertexTimeDiff*>(_vertices[2]);
+    const VertexPose* conf1 = getPose0();
+    const VertexPose* conf2 = getPose1();
+    const VertexTimeDiff* deltaT = getDt0();
     
     Eigen::Vector2d deltaS = conf2->position() - conf1->position();
     double dist = deltaS.norm();
@@ -218,17 +209,10 @@ public:
  * @see TebOptimalPlanner::AddEdgesVelocity
  * @remarks Do not forget to call setTebConfig()
  */  
-class EdgeVelocityHolonomic : public BaseTebMultiEdge<3, double>
+class EdgeVelocityHolonomic : public BaseEdgeVelocity<3, double>
 {
 public:
-  
-  /**
-   * @brief Construct edge.
-   */       
-  EdgeVelocityHolonomic()
-  {
-    this->resize(3); // Since we derive from a g2o::BaseMultiEdge, set the desired number of vertices
-  }
+
   
   /**
    * @brief Actual cost function
@@ -236,9 +220,9 @@ public:
   void computeError()
   {
     ROS_ASSERT_MSG(cfg_, "You must call setTebConfig on EdgeVelocityHolonomic()");
-    const VertexPose* conf1 = static_cast<const VertexPose*>(_vertices[0]);
-    const VertexPose* conf2 = static_cast<const VertexPose*>(_vertices[1]);
-    const VertexTimeDiff* deltaT = static_cast<const VertexTimeDiff*>(_vertices[2]);
+    const VertexPose* conf1 = getPose0();
+    const VertexPose* conf2 = getPose1();
+    const VertexTimeDiff* deltaT = getDt0();
     Eigen::Vector2d deltaS = conf2->position() - conf1->position();
     
     double cos_theta1 = std::cos(conf1->theta());

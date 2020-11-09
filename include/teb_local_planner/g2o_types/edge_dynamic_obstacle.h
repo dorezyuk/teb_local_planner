@@ -68,7 +68,7 @@ namespace teb_local_planner
  * @remarks Do not forget to call setTebConfig(), setVertexIdx() and 
  * @warning Experimental
  */  
-class EdgeDynamicObstacle : public BaseTebUnaryEdge<2, const Obstacle*, VertexPose>
+class EdgeDynamicObstacle : public BaseEdgePose<2, const Obstacle*>
 {
 public:
   
@@ -80,7 +80,7 @@ public:
   }
   
   /**
-   * @brief Construct edge and specify the time for its associated pose (neccessary for computeError).
+   * @brief Construct edge and specify the time for its associated pose (necessary for computeError).
    * @param t_ Estimated time until current pose is reached
    */      
   EdgeDynamicObstacle(double t) : t_(t)
@@ -93,7 +93,7 @@ public:
   void computeError()
   {
     ROS_ASSERT_MSG(cfg_ && _measurement && robot_model_, "You must call setTebConfig(), setObstacle() and setRobotModel() on EdgeDynamicObstacle()");
-    const VertexPose* bandpt = static_cast<const VertexPose*>(_vertices[0]);
+    const VertexPose* bandpt = getPose0();
     
     double dist = robot_model_->estimateSpatioTemporalDistance(bandpt->pose(), _measurement, t_);
 

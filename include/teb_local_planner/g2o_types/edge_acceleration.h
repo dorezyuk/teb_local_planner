@@ -75,29 +75,21 @@ namespace teb_local_planner
  * @remarks Do not forget to call setTebConfig()
  * @remarks Refer to EdgeAccelerationStart() and EdgeAccelerationGoal() for defining boundary values!
  */    
-class EdgeAcceleration : public BaseTebMultiEdge<2, double>
+class EdgeAcceleration : public BaseEdgeAcceleration<2, double>
 {
 public:
 
-  /**
-   * @brief Construct edge.
-   */ 
-  EdgeAcceleration()
-  {
-    this->resize(5);
-  }
-    
   /**
    * @brief Actual cost function
    */   
   void computeError()
   {
     ROS_ASSERT_MSG(cfg_, "You must call setTebConfig on EdgeAcceleration()");
-    const VertexPose* pose1 = static_cast<const VertexPose*>(_vertices[0]);
-    const VertexPose* pose2 = static_cast<const VertexPose*>(_vertices[1]);
-    const VertexPose* pose3 = static_cast<const VertexPose*>(_vertices[2]);
-    const VertexTimeDiff* dt1 = static_cast<const VertexTimeDiff*>(_vertices[3]);
-    const VertexTimeDiff* dt2 = static_cast<const VertexTimeDiff*>(_vertices[4]);
+    const VertexPose* pose1 = getPose0();
+    const VertexPose* pose2 = getPose1();
+    const VertexPose* pose3 = getPose2();
+    const VertexTimeDiff* dt1 = getDt0();
+    const VertexTimeDiff* dt2 = getDt1();
 
     // VELOCITY & ACCELERATION
     const Eigen::Vector2d diff1 = pose2->position() - pose1->position();
@@ -288,19 +280,9 @@ public:
  * @remarks Do not forget to call setTebConfig()
  * @remarks Refer to EdgeAccelerationGoal() for defining boundary values at the end of the trajectory!
  */      
-class EdgeAccelerationStart : public BaseTebMultiEdge<2, const geometry_msgs::Twist*>
+class EdgeAccelerationStart : public BaseEdgeVelocity<2, const geometry_msgs::Twist*>
 {
 public:
-
-  /**
-   * @brief Construct edge.
-   */	  
-  EdgeAccelerationStart()
-  {
-    _measurement = NULL;
-    this->resize(3);
-  }
-  
   
   /**
    * @brief Actual cost function
@@ -308,9 +290,9 @@ public:
   void computeError()
   {
     ROS_ASSERT_MSG(cfg_ && _measurement, "You must call setTebConfig() and setStartVelocity() on EdgeAccelerationStart()");
-    const VertexPose* pose1 = static_cast<const VertexPose*>(_vertices[0]);
-    const VertexPose* pose2 = static_cast<const VertexPose*>(_vertices[1]);
-    const VertexTimeDiff* dt = static_cast<const VertexTimeDiff*>(_vertices[2]);
+    const VertexPose* pose1 = getPose0();
+    const VertexPose* pose2 = getPose1();
+    const VertexTimeDiff* dt = getDt0();
 
     // VELOCITY & ACCELERATION
     const Eigen::Vector2d diff = pose2->position() - pose1->position();
@@ -379,19 +361,9 @@ public:
  * @remarks Do not forget to call setTebConfig()
  * @remarks Refer to EdgeAccelerationStart() for defining boundary (initial) values at the end of the trajectory
  */  
-class EdgeAccelerationGoal : public BaseTebMultiEdge<2, const geometry_msgs::Twist*>
+class EdgeAccelerationGoal : public BaseEdgeVelocity<2, const geometry_msgs::Twist*>
 {
 public:
-
-  /**
-   * @brief Construct edge.
-   */  
-  EdgeAccelerationGoal()
-  {
-    _measurement = NULL;
-    this->resize(3);
-  }
-  
 
   /**
    * @brief Actual cost function
@@ -399,9 +371,9 @@ public:
   void computeError()
   {
     ROS_ASSERT_MSG(cfg_ && _measurement, "You must call setTebConfig() and setGoalVelocity() on EdgeAccelerationGoal()");
-    const VertexPose* pose_pre_goal = static_cast<const VertexPose*>(_vertices[0]);
-    const VertexPose* pose_goal = static_cast<const VertexPose*>(_vertices[1]);
-    const VertexTimeDiff* dt = static_cast<const VertexTimeDiff*>(_vertices[2]);
+    const VertexPose* pose_pre_goal = getPose0();
+    const VertexPose* pose_goal = getPose1();
+    const VertexTimeDiff* dt = getDt0();
 
     // VELOCITY & ACCELERATION
 
@@ -471,17 +443,9 @@ public:
  * @remarks Do not forget to call setTebConfig()
  * @remarks Refer to EdgeAccelerationHolonomicStart() and EdgeAccelerationHolonomicGoal() for defining boundary values!
  */    
-class EdgeAccelerationHolonomic : public BaseTebMultiEdge<3, double>
+class EdgeAccelerationHolonomic : public BaseEdgeAcceleration<3, double>
 {
 public:
-
-  /**
-   * @brief Construct edge.
-   */    
-  EdgeAccelerationHolonomic()
-  {
-    this->resize(5);
-  }
     
   /**
    * @brief Actual cost function
@@ -489,11 +453,11 @@ public:
   void computeError()
   {
     ROS_ASSERT_MSG(cfg_, "You must call setTebConfig on EdgeAcceleration()");
-    const VertexPose* pose1 = static_cast<const VertexPose*>(_vertices[0]);
-    const VertexPose* pose2 = static_cast<const VertexPose*>(_vertices[1]);
-    const VertexPose* pose3 = static_cast<const VertexPose*>(_vertices[2]);
-    const VertexTimeDiff* dt1 = static_cast<const VertexTimeDiff*>(_vertices[3]);
-    const VertexTimeDiff* dt2 = static_cast<const VertexTimeDiff*>(_vertices[4]);
+    const VertexPose* pose1 = getPose0();
+    const VertexPose* pose2 = getPose1();
+    const VertexPose* pose3 = getPose2();
+    const VertexTimeDiff* dt1 = getDt0();
+    const VertexTimeDiff* dt2 = getDt1();
 
     // VELOCITY & ACCELERATION
     Eigen::Vector2d diff1 = pose2->position() - pose1->position();
@@ -563,18 +527,9 @@ public:
  * @remarks Do not forget to call setTebConfig()
  * @remarks Refer to EdgeAccelerationHolonomicGoal() for defining boundary values at the end of the trajectory!
  */      
-class EdgeAccelerationHolonomicStart : public BaseTebMultiEdge<3, const geometry_msgs::Twist*>
+class EdgeAccelerationHolonomicStart : public BaseEdgeVelocity<3, const geometry_msgs::Twist*>
 {
 public:
-
-  /**
-   * @brief Construct edge.
-   */   
-  EdgeAccelerationHolonomicStart()
-  {
-    this->resize(3);
-    _measurement = NULL;
-  }
     
   /**
    * @brief Actual cost function
@@ -582,9 +537,9 @@ public:
   void computeError()
   {
     ROS_ASSERT_MSG(cfg_ && _measurement, "You must call setTebConfig() and setStartVelocity() on EdgeAccelerationStart()");
-    const VertexPose* pose1 = static_cast<const VertexPose*>(_vertices[0]);
-    const VertexPose* pose2 = static_cast<const VertexPose*>(_vertices[1]);
-    const VertexTimeDiff* dt = static_cast<const VertexTimeDiff*>(_vertices[2]);
+    const VertexPose* pose1 = getPose0();
+    const VertexPose* pose2 = getPose1();
+    const VertexTimeDiff* dt = getDt0();
 
     // VELOCITY & ACCELERATION
     Eigen::Vector2d diff = pose2->position() - pose1->position();
@@ -654,18 +609,9 @@ public:
  * @remarks Do not forget to call setTebConfig()
  * @remarks Refer to EdgeAccelerationHolonomicStart() for defining boundary (initial) values at the end of the trajectory
  */  
-class EdgeAccelerationHolonomicGoal : public BaseTebMultiEdge<3, const geometry_msgs::Twist*>
+class EdgeAccelerationHolonomicGoal : public BaseEdgeVelocity<3, const geometry_msgs::Twist*>
 {
 public:
-
-  /**
-   * @brief Construct edge.
-   */  
-  EdgeAccelerationHolonomicGoal()
-  {
-    _measurement = NULL;
-    this->resize(3);
-  }
   
   /**
    * @brief Actual cost function
@@ -673,9 +619,9 @@ public:
   void computeError()
   {
     ROS_ASSERT_MSG(cfg_ && _measurement, "You must call setTebConfig() and setGoalVelocity() on EdgeAccelerationGoal()");
-    const VertexPose* pose_pre_goal = static_cast<const VertexPose*>(_vertices[0]);
-    const VertexPose* pose_goal = static_cast<const VertexPose*>(_vertices[1]);
-    const VertexTimeDiff* dt = static_cast<const VertexTimeDiff*>(_vertices[2]);
+    const VertexPose* pose_pre_goal = getPose0();
+    const VertexPose* pose_goal = getPose1();
+    const VertexTimeDiff* dt = getDt0();
 
     // VELOCITY & ACCELERATION
 

@@ -70,7 +70,7 @@ namespace teb_local_planner
  * @see TebOptimalPlanner::AddEdgesTimeOptimal
  * @remarks Do not forget to call setTebConfig()
  */
-class EdgeTimeOptimal : public BaseTebUnaryEdge<1, double, VertexTimeDiff>
+class EdgeTimeOptimal : public BaseEdgeDt<1, double>
 {
 public:
     
@@ -88,7 +88,7 @@ public:
   void computeError()
   {
     ROS_ASSERT_MSG(cfg_, "You must call setTebConfig on EdgeTimeOptimal()");
-    const VertexTimeDiff* timediff = static_cast<const VertexTimeDiff*>(_vertices[0]);
+    const VertexTimeDiff* timediff = getDt0();
 
    _error[0] = timediff->dt();
   

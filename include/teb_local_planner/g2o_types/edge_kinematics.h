@@ -70,7 +70,7 @@ namespace teb_local_planner
  * @see TebOptimalPlanner::AddEdgesKinematics, EdgeKinematicsCarlike
  * @remarks Do not forget to call setTebConfig()
  */    
-class EdgeKinematicsDiffDrive : public BaseTebBinaryEdge<2, double, VertexPose, VertexPose>
+class EdgeKinematicsDiffDrive : public BaseEdgeTwoPoses<2, double>
 {
 public:
   
@@ -88,8 +88,8 @@ public:
   void computeError()
   {
     ROS_ASSERT_MSG(cfg_, "You must call setTebConfig on EdgeKinematicsDiffDrive()");
-    const VertexPose* conf1 = static_cast<const VertexPose*>(_vertices[0]);
-    const VertexPose* conf2 = static_cast<const VertexPose*>(_vertices[1]);
+    const VertexPose* conf1 = getPose0();
+    const VertexPose* conf2 = getPose1();
     
     Eigen::Vector2d deltaS = conf2->position() - conf1->position();
 
@@ -112,8 +112,8 @@ public:
   void linearizeOplus()
   {
     ROS_ASSERT_MSG(cfg_, "You must call setTebConfig on EdgeKinematicsDiffDrive()");
-    const VertexPose* conf1 = static_cast<const VertexPose*>(_vertices[0]);
-    const VertexPose* conf2 = static_cast<const VertexPose*>(_vertices[1]);
+    const VertexPose* conf1 = getPose0();
+    const VertexPose* conf2 = getPose1();
     
     Eigen::Vector2d deltaS = conf2->position() - conf1->position();
 	    
@@ -179,7 +179,7 @@ public:
  *          the user might add an extra margin to the min_turning_radius param.
  * @remarks Do not forget to call setTebConfig()
  */    
-class EdgeKinematicsCarlike : public BaseTebBinaryEdge<2, double, VertexPose, VertexPose>
+class EdgeKinematicsCarlike : public BaseEdgeTwoPoses<2, double>
 {
 public:
   
@@ -197,8 +197,8 @@ public:
   void computeError()
   {
     ROS_ASSERT_MSG(cfg_, "You must call setTebConfig on EdgeKinematicsCarlike()");
-    const VertexPose* conf1 = static_cast<const VertexPose*>(_vertices[0]);
-    const VertexPose* conf2 = static_cast<const VertexPose*>(_vertices[1]);
+    const VertexPose* conf1 = getPose0();
+    const VertexPose* conf2 = getPose1();
     
     Eigen::Vector2d deltaS = conf2->position() - conf1->position();
 

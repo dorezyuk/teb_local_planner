@@ -20,7 +20,7 @@ namespace teb_local_planner
  * @see TebOptimalPlanner::AddEdgesObstacles, TebOptimalPlanner::EdgeInflatedObstacle
  * @remarks Do not forget to call setTebConfig() and setObstacle()
  */
-class EdgeVelocityObstacleRatio : public BaseTebMultiEdge<2, const Obstacle*>
+class EdgeVelocityObstacleRatio : public BaseEdgeVelocity<2, const Obstacle*>
 {
 public:
 
@@ -30,8 +30,6 @@ public:
   EdgeVelocityObstacleRatio() :
     robot_model_(nullptr)
   {
-    // The three vertices are two poses and one time difference
-    this->resize(3); // Since we derive from a g2o::BaseMultiEdge, set the desired number of vertices
   }
 
   /**
@@ -40,9 +38,9 @@ public:
   void computeError()
   {
     ROS_ASSERT_MSG(cfg_ && _measurement && robot_model_, "You must call setTebConfig(), setObstacle() and setRobotModel() on EdgeVelocityObstacleRatio()");
-    const VertexPose* conf1 = static_cast<const VertexPose*>(_vertices[0]);
-    const VertexPose* conf2 = static_cast<const VertexPose*>(_vertices[1]);
-    const VertexTimeDiff* deltaT = static_cast<const VertexTimeDiff*>(_vertices[2]);
+    const VertexPose* conf1 = getPose0();
+    const VertexPose* conf2 = getPose1();
+    const VertexTimeDiff* deltaT = getDt0();
 
     const Eigen::Vector2d deltaS = conf2->estimate().position() - conf1->estimate().position();
 
