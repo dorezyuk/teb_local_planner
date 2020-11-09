@@ -301,6 +301,7 @@ protected:
 /// @brief Edge with a pose vertex
 template <int D, typename E>
 struct BaseEdgePose : public BaseTebUnaryEdge<D, E, VertexPose> {
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 protected:
   inline const VertexPose*
   getPose0() const {
@@ -311,6 +312,7 @@ protected:
 /// @brief Edge connecting two poses
 template <int D, typename E>
 struct BaseEdgeTwoPoses : public BaseTebBinaryEdge<D, E, VertexPose, VertexPose> {
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 protected:
   inline const VertexPose*
   getPose0() const {
@@ -327,7 +329,7 @@ protected:
 template <int D, typename E>
 struct BaseEdgeVelocity : public BaseTebMultiEdge<D, E> {
   BaseEdgeVelocity() { BaseTebMultiEdge<D, E>::resize(3); }
-
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 protected:
   inline const VertexPose*
   getPose0() const {
@@ -349,7 +351,7 @@ protected:
 template <int D, typename E>
 struct BaseEdgeAcceleration : public BaseTebMultiEdge<D, E> {
   BaseEdgeAcceleration() { BaseTebMultiEdge<D, E>::resize(5); }
-
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 protected:
   inline const VertexPose*
   getPose0() const {
