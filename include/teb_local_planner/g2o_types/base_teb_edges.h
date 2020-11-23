@@ -448,6 +448,7 @@ void addEdges(HyperGraph &_graph, const TebConfig &_cfg,
 // below some trickery to check if a class derives from a templated base class
 // adjusted from
 // https://stackoverflow.com/questions/34672441/stdis-base-of-for-template-classes
+// and https://en.cppreference.com/w/cpp/types/is_base_of
 template <template <int, typename...> class Base, typename Derived>
 struct is_base_of_impl {
   template <int D, typename... Ts>
